@@ -1,5 +1,7 @@
 #include "simulation/ElementCommon.h"
 
+static int update(UPDATE_FUNC_ARGS);
+
 void Element::Element_GAS()
 {
 	Identifier = "DEFAULT_PT_GAS";
@@ -40,4 +42,30 @@ void Element::Element_GAS()
 	LowTemperatureTransition = NT;
 	HighTemperature = 573.0f;
 	HighTemperatureTransition = PT_FIRE;
+
+	Update = &update;
+}
+
+static int update(UPDATE_FUNC_ARGS) {
+	if (surround_space == 8) {return 0;}
+	
+	for (auto offset_x = -1; offset_x <= 1; offset_x++)
+	{
+		for (auto offset_y = -1; offset_y <= 1; offset_y++) {
+			if (offset_x == 0 && offset_y == 0) {continue;}
+
+			auto r = pmap[y+offset_y][x+offset_x]; // i would have called this n_pmap, why is it r lol
+			
+			if (TYP(r) == PT_BASE && (parts[ID(r)].life > 3)) {
+
+				if ((sim->rng.chance(1, parts[ID(r)].life + 10)) && parts[ID(r)].life > 3) { // decrease the BASE's life by 3 and convert into HEXM when in contact with BASE
+					sim->part_change_type(i, x, y, PT_HEXM);
+					parts[ID(r)].life -= 3;  
+				}
+			}
+			
+		}
+	}
+	
+	return 0;
 }

@@ -113,7 +113,7 @@ static int update(UPDATE_FUNC_ARGS)
 
 				//Don't react with some elements
 				if (rt != PT_BASE && rt != PT_SALT && rt != PT_SLTW && rt != PT_BOYL && rt != PT_MERC &&
-					       	rt != PT_BMTL && rt != PT_BRMT && rt != PT_SOAP && rt != PT_CLNE && rt != PT_PCLN &&
+					  rt != PT_BMTL && rt != PT_BRMT && rt != PT_SOAP && rt != PT_CLNE && rt != PT_PCLN && rt != PT_HEXM &&
 						!(rt == PT_ICEI && parts[ID(r)].ctype == PT_BASE) && !(rt == PT_SNOW && parts[ID(r)].ctype == PT_BASE) &&
 						!(rt == PT_SPRK && parts[ID(r)].ctype == PT_BMTL) && !(rt == PT_SPRK && parts[ID(r)].ctype == PT_BRMT))
 				{
