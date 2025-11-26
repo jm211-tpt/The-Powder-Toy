@@ -128,6 +128,11 @@ static int graphics(GRAPHICS_FUNC_ARGS)
 		*pixel_mode = PMODE_FLAT | FIRE_ADD;
 		*firea = 255;
 	}
+	else if (cpart->tmp==3)
+	{
+		*pixel_mode = FIRE_ADD | PMODE_BLEND | PMODE_GLOW;
+		*firea = 40;
+	}
 	else
 	{
 		*pixel_mode = PMODE_SPARK | PMODE_ADD;

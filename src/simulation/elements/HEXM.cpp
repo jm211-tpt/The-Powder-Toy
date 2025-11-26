@@ -49,39 +49,91 @@ void Element::Element_HEXM()
 }
 
 static int update(UPDATE_FUNC_ARGS) {
-	if (surround_space == 8) {return 0;}
-	
-	for (auto offset_x = -1; offset_x <= 1; offset_x++)
+	// bool foundSAWD = false;
+	// bool foundOIL = false;
+	// int sawdID = -1;
+	// int oilID = -1;
+	for (auto rx = -1; rx <= 1; rx++)
 	{
-		for (auto offset_y = -1; offset_y <= 1; offset_y++) {
-			if (offset_x == 0 && offset_y == 0) {continue;}
-			auto r = pmap[y+offset_y][x+offset_x];
+		for (auto ry = -1; ry <= 1; ry++) 
+		{
+			if (rx == 0 && ry == 0) {continue;}
+			auto r = pmap[y+ry][x+rx];
+			if (r != 0)
+			{
+				if (TYP(r) == PT_LO2 && parts[i].life < 10)
+				{
+					sim->kill_part(ID(r));
+					parts[i].life += 1;
+				}
+				else if (TYP(r) == PT_ACID) // && sim->rng.chance(1, 2))
+				{
+					// sim->kill_part(ID(r));
+					sim->part_change_type(ID(r), x, y, PT_NITR);
+					sim->part_change_type(i, x, y, PT_NITR);
+				}
+			}
+			else
+			{
+				if (parts[i].life > 0 && sim->pv[y / CELL][x / CELL] <= 20 && sim->rng.chance(parts[i].life, static_cast<unsigned int>(266 + sim->pv[y / CELL][x / CELL])))
+				{
+					int np = sim->create_part(-1, x + rx, y + ry, PT_FIRE);
+					if (np > -1)
+					{
+						parts[i].life -= 1;
+						sim->pv[y / CELL][x / CELL] += 0.5;
+						parts[np].temp = std::min(3773.15f + sim->rng.between(0, 200), parts[i].temp + 200.0f);
+					}
+				}
+				else if (sim->pv[y / CELL][x / CELL] <= -200 && parts[i].temp >= 553.15 && sim->rng.chance(1, 20) && parts[i].life == 0)
+				{
+					int np = sim->create_part(-1, x + rx, y + ry, PT_GAS);
+					if (np > -1)
+					{
+						sim->part_change_type(i, x, y, PT_BASE);
+						parts[i].life = 1;
+						parts[np].temp = parts[i].temp;
+						sim->pv[y / CELL][x / CELL] += 2.5;
+					}
+				}
 
-			if (TYP(r) == PT_LO2 && parts[i].life < 10) { 
-				sim->kill_part(ID(r));
-				parts[i].life += 1;
-			}		
+			}
+			// else if (TYP(r) == PT_SAWD)
+			// {
+			// 	foundSAWD = true;
+			// 	sawdID = ID(r);
+			// }
+			// else if (TYP(r) == PT_OIL)
+			// {
+			// 	foundOIL = true;
+			// 	oilID = ID(r);
+			// }
 		}
 	}
-	auto offset_x = sim->rng.between(-2, 2);
-	auto offset_y = sim->rng.between(-2, 2); // i only want this to run once per update, so no for loop
-	auto r = pmap[y+offset_y][x+offset_x];
-	if (TYP(r) == PT_HEXM && (offset_x || offset_y) && (parts[i].life > parts[ID(r)].life) && sim->rng.chance(1, 5) ) { // diffuse
+	auto r2x = sim->rng.between(-2, 2);
+	auto r2y = sim->rng.between(-2, 2); // i only want this to run once per update, so no for loop
+	auto r = pmap[y+r2y][x+r2x];
+	if (TYP(r) == PT_HEXM && (r2x || r2y) && (parts[i].life > parts[ID(r)].life) && sim->rng.chance(1, 5) ) { // diffuse
 		parts[i].life -= 1;
 		parts[ID(r)].life += 1;
 	}
-	
+	// if (foundSAWD && foundOIL && sim->rng.chance(1,5))
+	// {
+	// 		float newT = (parts[i].temp + parts[sawdID].temp + parts[oilID].temp)/2; // average temps and then multiply by 1.5
+	// 		sim->kill_part(sawdID);
+	// 		sim->kill_part(oilID);
+	// 		sim->part_change_type(i, x, y, PT_GEL);
+	// 		parts[i].temp = newT;
+	// }
 	return 0;
 }
 
 static int graphics(GRAPHICS_FUNC_ARGS) {
 	*colr = 0xA0;
 	*colg = 0xC0;
-	int clamped_colb; // i don't know c++
-	auto unclamped_colb = 0xA0 + (std::pow((float)cpart->life, 1.978f));
-	if (unclamped_colb > 255) {clamped_colb = 255;}
-	else if (unclamped_colb < 0) {clamped_colb = 0;}
-	else {clamped_colb = unclamped_colb;}
-	*colb = std::floorf(clamped_colb);
+	float unclamped_colb = 0xA0 + (std::pow((float)cpart->life, 1.978f));
+	float clamped_colb = std::max(0.0f, std::min(255.0f, unclamped_colb));
+	clamped_colb = unclamped_colb;
+	*colb = static_cast<int>(std::floorf(clamped_colb));
 	return 0;
 }
